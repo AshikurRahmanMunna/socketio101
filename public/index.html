@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple chat app</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              clifford: "#da373d",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body>
+    <ul class="list-style-none p-5" id="messages"></ul>
+    <div class="form-container">
+      <form
+        id="msg-form"
+        class="fixed bottom-0 left-0 right-0 flex items-center justify-center"
+      >
+        <input
+          type="text"
+          placeholder="Type message here"
+          class="border-green-300 pl-5 border-2 w-full h-[50px]"
+          id="input"
+          name="message"
+          autocomplete="off"
+        />
+        <input
+          type="submit"
+          id="submit"
+          class="btn rounded-none bg-green-500 h-[50px] w-[100px]"
+        />
+      </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      const socket = io("http://localhost:8000");
+      const messages = document.getElementById("messages");
+      let userId = "";
+      socket.on("conn", ({ id }) => {
+        userId = id;
+      });
+
+      socket.on("change", (s) => {
+        window.location.reload();
+      });
+
+      socket.on("sentMessage", (msg) => {
+        const li = document.createElement("li");
+        let innerHtml = "";
+        if (userId === msg.id) {
+          innerHtml = `<div>
+            <p class="text-gray-500 text-sm mb-2"><small>You</small></p>
+            <p class="font-bold bg-green-600 inline px-3 py-2 rounded-md">${msg.text}</p>
+          </div>`;
+        } else {
+          innerHtml = `
+          <div>
+              <p class="text-gray-500 text-sm mb-2">
+                <small>${userId}</small>
+              </p>
+              <p class="font-bold bg-yellow-600 inline px-3 py-2 rounded-md">
+                ${msg.text}
+              </p>
+            </div>
+            `;
+        }
+        li.innerHTML = innerHtml;
+        console.log(userId, msg);
+        li.className = `${userId === msg.id ? "text-right" : "text-left"}`;
+        messages.appendChild(li);
+      });
+
+      document.querySelector("#msg-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = e.target.message.value;
+        if (!text) {
+          return;
+        }
+        socket.emit("newMessage", text);
+        e.target.message.value = "";
+      });
+    </script>
+  </body>
+</html>

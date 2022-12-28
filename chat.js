@@ -14,7 +14,7 @@ app.use(express.static(__dirname + "/public"));
 
 const expressServer = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-})
+});
 
 const io = socketIo(expressServer);
 
